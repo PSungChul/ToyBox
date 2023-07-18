@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Google 회원가입</title>
+    <link rel="stylesheet" type="text/css" href="/css/join_find.css">
+</head>
+<body>
+<div class="container">
+    <form action="/loginform/googletoken/join" method="post" th:object="${socialDTO}">
+        <!-- 어느 소셜 플랫폼 가입자인지 구별 -->
+        <input th:field="*{platform}" type="hidden">
+
+        <div class="mainLogo">
+            <a href="/" alt="ToyBox">
+                <img src="/img/logo/ToyBoxLogo.png.jpeg" class="mainLogoImg">
+            </a>
+        </div>
+        <h2>Google 휴대폰 추가인증</h2>
+
+        <div class="joinFormContainer">
+            <ul>
+                <!-- th:field="*{th:object로 가져온 객체의 내부 변수명}" - 모델로 바인딩한 객체의 내부 변수들을 가져와 id, name, value 속성을 자동으로 처리 해준다. -->
+                <li class="liJoinInput"><label class="labelText">아이디(이메일) </label><br><input th:field="*{email}" class="inputText" type="text"></li>
+
+                <li class="liJoinInput"><label class="labelText">이름 </label><br><input th:field="*{name}" class="inputText" type="text" readonly></li>
+
+                <li class="liJoinInput"><label class="labelText">생일 </label><br><input th:field="*{birthday}" class="inputText" type="date" readonly></li>
+
+                <li class="liJoinInput"><label class="labelText">휴대전화 </label><br><input th:field="*{phoneNumber}" class="inputText" type="tel" readonly>
+                                                                                    <input id="btnPhone" value="인증하기" class="btnJoinForm" type="button"></li>
+            </ul>
+        </div>
+
+        <div class="divBtnJoin">
+            <input type="button" class="btnJoin" value="가입" onclick="join(this.form)">
+            <input type="button" class="btnJoin" value="취소" onclick="location.href='/loginform'">
+        </div>
+    </form>
+</div>
+</body>
+<!---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
+<!-- iamport.payment.js 인증 -->
+<script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.2.0.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<!-- 아임포트 본인인증 및 값 삽입 => '인증하기' 버튼 클릭시 -->
+<script>
+    // textbox & 버튼(2개이상)을 누르면 함수가 실행되도록 하는 방법
+    // querySelectorAll로 id값(#id)을 불러와서 배열로 생성, 이후 forEach문을 활용해 각각의 것을 눌렀을 때 실행되게 하도록 한다.
+    let openPort = document.querySelectorAll('#phoneNumber, #btnPhone');
+    openPort.forEach(function(element) {
+        element.addEventListener('click', function() {
+            var IMP = window.IMP;
+            IMP.init('imp88140833');
+            IMP.certification({
+                popup: true // 팝업 사용
+            }, function (rsp) {
+                if (rsp.success){
+                    let impUid = rsp.imp_uid;
+                    fetch('/loginform/certificationform/certification', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: 'impUid=' + impUid
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            let name = document.getElementById('name');
+                            let birthday = document.getElementById('birthday');
+                            let phoneNumber = document.getElementById('phoneNumber');
+                            if(data.phoneNumber == 'no') {
+                                alert('이미 가입된 회원정보가 있습니다.\n로그인 혹은 아이디/비밀번호 찾기를 이용해 주세요.');
+                                location.href = '/loginform';
+                                return;
+                            } else {
+                                if (name == data.name && birthday == data.birthday) {
+                                    alert('본인 명의로 된 휴대폰으로 인증해주시기 바랍니다.');
+                                    return;
+                                } else {
+                                    phoneNumber.value = data.phoneNumber;
+                                    return;
+                                }
+                            }
+                        })
+                        .catch(error => console.error(error)); // fetch
+                } else {
+                    alert('인증 실패하였습니다.');
+                    return;
+                } // function
+            }); // certification
+        }); // addEventListener
+    }); // forEach
+</script>
+<!--회원가입 진행 & 유효성 검사-->
+<script>
+    function join(f) {
+        let phoneNumber = f.phoneNumber.value;
+
+        //유효성 검사
+
+        if (phoneNumber == '') {
+            alert('휴대폰 인증을 해주세요.');
+            return;
+        }
+
+        alert('가입이 완료되었습니다.\n 로그인 페이지로 이동합니다.');
+        f.submit();
+    }
+</script>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>아이디 찾기</title>
+    <link rel="stylesheet" type="text/css" href="/css/join_find.css">
+    <link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-neo.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container smallContainer">
+        <div class="mainLogo">
+            <a href="/" alt="ToyBox">
+                <img src="/img/logo/ToyBoxLogo.png" class="mainLogoImg">
+            </a>
+        </div>
+        <h2>아이디 찾기</h2>
+        <form th:object="${userDTO}">
+            <div class="joinFormContainer">
+                <ul class="findIdForm">
+                    <li class="liJoinInput"><label class="labelText">이름</label><br><input th:field="*{name}" class="inputText" type="text" placeholder="이름"></li>
+                    <li class="liJoinInput"><label class="labelText">생년월일</label><br><input th:field="*{birthday}" class="inputText" type="text" placeholder="생년월일 앞8자리"></li>
+                    <li class="liJoinInput"><label class="labelText">핸드폰번호</label><br><input th:field="*{phoneNumber}" class="inputText" type="text" placeholder="'-'없이 입력"></li>
+                </ul>
+            </div>
+            <div class="divBtnJoin">
+                <input type="button" value="아이디 찾기" class="btnJoin" onclick="findId(this.form)">
+                <input type="button" value="취소하기" class="btnJoin" onclick="location.href='/loginform'">
+            </div>
+        </form>
+
+        <div class="divOr">
+            <hr />
+            OR
+            <hr />
+        </div>
+
+        <form action="/loginform/certificationform" method="get">
+            <input name="type" type="hidden" value="findId">
+            <div class="divBtnJoin">
+                <input type="submit" value="본인인증" class="btnJoin">
+            </div>
+        </form>
+    </div>
+</body>
+<!--------------------------------------------------------------------------------------------------------------------->
+<script>
+    function findId(f) {
+        let name = f.name.value;
+        let birthday = f.birthday.value;
+        let phoneNumber = f.phoneNumber.value;
+
+        // 유효성 검사
+
+        if (name == '') {
+            alert('이름을 입력하세요.');
+            return;
+        }
+
+        if (birthday == '') {
+            alert('생년월일을 입력하세요.');
+            return;
+        }
+
+        if (phoneNumber == '') {
+            alert('핸드폰 번호를 입력하세요.');
+            return;
+        }
+
+        fetch('/loginform/findidform/findid', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'name=' + name +
+                  '&birthday=' + birthday +
+                  '&phoneNumber=' + phoneNumber.replace(/[^0-9]/g, '')
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                if (data.name == 'no') {
+                    alert('해당정보로 가입된 사용자를 찾을수 없습니다.\n입력하신 정보를 다시 확인해 주세요.');
+                    return;
+                } else if (data.name == 'platform') {
+                    alert(data.id);
+                    return;
+                } else {
+                    alert(data.name + '님 아이디는 ' + data.id + '입니다.');
+                    return;
+                }
+            })
+            .catch(error => console.error(error));
+    }
+</script>
+</html>

@@ -1,0 +1,58 @@
+        html {
+            height: 100%;
+        }
+        *{
+            font-family: 'NanumSquareNeo';
+        }
+        body{
+            background-color: #E6E6E6;
+        }
+        .container{
+            width: 500px;
+            height: 500px;
+            margin: auto;
+            background-color: white;
+            border-radius: 30px;
+            border: solid 1px #BBBBBB;
+            padding: 20px 0px;
+        }
+        .smallContainer{
+            margin: 10% 30%;
+        }
+        .mainLogo{
+            height: 100px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        .mainLogoImg{
+            height: 100%;
+            width: 100%;
+        }
+        h2{
+            text-align: center;
+            color: #4A8D51;
+        }
+        .joinFormContainer h2{
+            font-size: 20px;
+        }
+
+        .joinFormContainer{
+            width: 100%;
+        }
+        placeholder{
+            font-size:15px;
+        }
+        .btnJoinForm{
+            width: 100px;
+            height: 100px;
+            margin: 5px;
+            border: solid 1px #87AF6E;
+            background-color: #BDE7A4;
+            border-radius: 5px;
+            color: #4A8D51;
+            font-weight: bold;
+        }
+        .divBtnJoin{
+            text-align: center;
+        }

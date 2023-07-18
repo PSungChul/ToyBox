@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Naver 회원가입</title>
+    <link rel="stylesheet" type="text/css" href="/css/join_find.css">
+</head>
+<body>
+    <div class="container">
+        <form action="/loginform/navercallback/certification/add/join" method="post" th:object="${socialDTO}">
+            <!-- 어느 소셜 플랫폼 가입자인지 구별 -->
+            <input th:field="*{platform}" type="hidden">
+            <!-- 이메일 중복 체크 값 -->
+            <input id="hEmailCheck" type="hidden">
+            <!-- 이메일 인증 번호 체크 값 -->
+            <input id="hEmailKey" type="hidden">
+
+            <div class="mainLogo">
+                <a href="/" alt="ToyBox">
+                    <img src="/img/logo/ToyBoxLogo.png.jpeg" class="mainLogoImg">
+                </a>
+            </div>
+            <h2>Naver 이메일 추가인증</h2>
+
+            <div class="joinFormContainer">
+                <ul>
+                    <!-- th:field="*{th:object로 가져온 객체의 내부 변수명}" - 모델로 바인딩한 객체의 내부 변수들을 가져와 id, name, value 속성을 자동으로 처리 해준다. -->
+                    <li class="liJoinInput"><label class="labelText">아이디(이메일) </label><br><input th:field="*{email}" class="inputEmailText" type="text"><input class="inputEmailText" type="text" value="@naver.com" readonly>
+                                                                                             <input type="button" value="인증번호 전송" class="btnJoinForm" onclick="sendEmail(this.form)"></li>
+                    <li class="liJoinInput"><label class="labelText">인증번호 입력 </label><br><input id="emailKey" class="inputText" placeholder="인증번호" type="text">
+                                                                                            <input type="button" value="인증번호 확인" class="btnJoinForm" onclick="checkEmail()"></li>
+
+                    <li class="liJoinInput"><label class="labelText">이름 </label><br><input th:field="*{name}" class="inputText" type="text" readonly></li>
+
+                    <li class="liJoinInput"><label class="labelText">생일 </label><br><input th:field="*{birthday}" class="inputText" type="date" readonly></li>
+
+                    <li class="liJoinInput"><label class="labelText">휴대전화 </label><br><input th:field="*{phoneNumber}" class="inputText" type="tel" readonly></li>
+                </ul>
+            </div>
+
+            <div class="divBtnJoin">
+                <input type="button" class="btnJoin" value="가입" onclick="join(this.form)">
+                <input type="button" class="btnJoin" value="취소" onclick="location.href='/loginform'">
+            </div>
+        </form>
+    </div>
+</body>
+<!---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
+<!-- 이메일 중복 체크, 이메일 인증 번호 전송 및 체크 -->
+<script>
+    // 이메일 인증 번호 발송
+    function sendEmail(f) {
+        let email = document.getElementsByClassName('inputEmailText')[0].value +
+                    document.getElementsByClassName('inputEmailText')[1].value; // 이메일
+
+        // 이메일 형식 체크 패턴
+        let pattern = /^[A-Za-z0-9_\.\-]+@[A-Za-z0-9\-]+\.[A-Za-z0-9\-]+/;
+
+        // 아이디가 이메일 형식에 맞는지 체크한다.
+        // 이메일 형식이 아닐 경우
+        if( !pattern.test(email) ) {
+            alert('이메일 형식을 다시 확인해주세요.\n ex) abc@naver.com');
+            return;
+        // 이메일 형식이 맞는 경우
+        } else {
+            fetch('/loginform/certification/email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'email=' + email
+            })
+                .then(response => response.json()) // JSON 형식으로 파싱
+                .then(data => {
+                    let hEmailCheck = document.getElementById('hEmailCheck'); // 아이디 중복 체크 값
+                    let hEmailKey = document.getElementById('hEmailKey'); // 이메일 인증 번호 체크 값
+
+                    // 메일이 발송이 실패한 경우 - 중복된 아이디 - 사용 불가
+                    if (data.email == '0') {
+                        alert(data.msg); // 변환된 DTO 값 중 메세지를 가져와 알람으로 띄운다.
+                        hEmailCheck.value = 'false'; // 아이디 중복 체크 값에 false를 전달한다.
+                        return;
+                    // 메일 발송이 실패한 경우 - 내부 문제로 발송 실패
+                    } else if (data.email == '-1') {
+                        alert(data.msg); // 변환된 DTO 값 중 메세지를 가져와 알람으로 띄운다.
+                        hEmailCheck.value = 'false'; // 아이디 중복 체크 값에 false를 전달한다.
+                        return;
+                    // 메일이 발송이 성공한 경우 - 사용 가능한 아이디
+                    } else {
+                        alert('인증 메일을 발송했습니다.');
+                        hEmailKey.value = data.msg; // 이메일 인증 번호 체크 값에 암호화된 이메일 인증 번호를 전달한다.
+                        return;
+                    }
+                }) // 응답 데이터 처리
+                .catch(error => console.error(error)); // 오류 처리
+        }
+    }
+
+    // 이메일 인증 번호 체크
+    function checkEmail() {
+        let email = document.getElementsByClassName('inputEmailText')[0].value +
+                    document.getElementsByClassName('inputEmailText')[1].value; // 이메일
+        let emailKey = document.getElementById('emailKey'); // 이메일 인증 번호
+        let hEmailCheck = document.getElementById('hEmailCheck'); // 아이디 중복 체크 값
+        let hEmailKey = document.getElementById('hEmailKey'); // 이메일 인증 번호 체크 값(암호화된 이메일 인증 번호)
+
+        fetch('/loginform/certification/email/check', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'emailKey=' + emailKey.value +
+                  '&hEmailKey=' + hEmailKey.value
+        })
+            .then(response => response.json()) // JSON 형식으로 파싱
+            .then(data => {
+                // 이메일 인증 번호가 일치하는 경우 - 아아디 사용 가능
+                if (data === true) {
+                    alert('인증 되었습니다.');
+                    hEmailCheck.value = 'true'; // 아이디 중복 체크 값에 true를 전달한다.
+                    email.readOnly = true; // 인증된 아이디를 변경하지 못하도록 막는다.
+                    emailKey.readOnly = true; // 작성한 이메일 인증 번호를 변경하지 못하도록 막는다.
+                    return;
+                // 이메일 인증 번호가 일치하지 않는 경우 - 아이디 사용 불가
+                } else {
+                    alert('인증 번호를 다시 확인해주세요.');
+                    hEmailCheck.value = 'false'; // 아이디 중복 체크 값에 false를 전달한다.
+                    emailKey.value = ''; // 작성한 이메일 인증 번호를 초기화한다.
+                    return;
+                }
+            }) // 응답 데이터 처리
+            .catch(error => console.error(error)); // 오류 처리
+    }
+</script>
+<!--회원가입 진행 & 유효성 검사-->
+<script>
+    function join(f) {
+        let email = document.getElementsByClassName('inputEmailText')[0].value +
+                    document.getElementsByClassName('inputEmailText')[1].value; // 이메일
+        let emailKey = document.getElementById("emailKey").value;
+        let hEmailCheck = document.getElementById("hEmailCheck").value;
+
+        //유효성 검사
+
+        // 이메일
+        if (email == '') {
+            alert('이메일을 입력하세요.');
+            return;
+        }
+
+        // 인증번호
+        if (emailKey == '') {
+            alert('인증번호를 확인해주세요.');
+            return;
+        }
+
+        // 인증번호 확인
+        if (hEmailCheck != 'true') {
+            alert('인증번호를 체크해주세요.');
+            return;
+        }
+
+        alert('가입이 완료되었습니다.\n 로그인 페이지로 이동합니다.');
+        f.submit();
+    }
+</script>
+</html>

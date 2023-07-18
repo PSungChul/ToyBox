@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToyBox</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+    <header>
+        <!-- 로고 구역 -->
+        <div class="logoArea">
+            <a href="/"><img src="/img/logo/ToyBoxLogo.png" alt="메가박스 로고"></a>
+        </div>
+
+        <!-- 메뉴 구역 -->
+        <nav class="menuArea">
+            <ul>
+                <li><a href="#">영화</a></li>
+                <li><a href="#">상영관</a></li>
+                <li><a href="#">이벤트</a></li>
+                <li><a href="#">고객센터</a></li>
+            </ul>
+        </nav>
+
+        <!-- 로그인 구역 -->
+        <nav class="loginArea">
+            <ul>
+                <li sec:authorize="isAnonymous()">로그인을 해주시기 바랍니다!</li>
+                <li sec:authorize="isAnonymous()"><a href="/loginform">로그인</a></li>
+                <li sec:authorize="isAuthenticated()"><span th:text="${name}"></span>님 어서오세요!!</li>
+                <li sec:authorize="isAuthenticated()"><a href="/logout">로그아웃</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="banner">
+            <img th:src="@{'https://image.tmdb.org/t/p/original' + ${movieBanner}}" alt="메인 배너">
+        </section>
+
+        <section class="movies">
+            <h2>상영 영화</h2>
+            <div id="movie-list" class="movie-list">
+                <!-- 동적으로 생성될 영화 목록 -->
+            </div>
+        </section>
+
+        <section class="event">
+            <h2>이벤트</h2>
+            <div class="event-item">
+                <img src="/img/logo/ToyBox_ImageLogo.png" alt="이벤트 1">
+                <h3>이벤트 제목</h3>
+                <p>이벤트 설명</p>
+            </div>
+            <div class="event-item">
+                <img src="/img/logo/ToyBox_ImageLogo.png" alt="이벤트 2">
+                <h3>이벤트 제목</h3>
+                <p>이벤트 설명</p>
+            </div>
+            <!-- 추가 이벤트 아이템들 -->
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>메가박스 정보</p>
+            <ul>
+                <li><a href="#">이용약관</a></li>
+                <li><a href="#">개인정보처리방침</a></li>
+                <li><a href="#">고객센터</a></li>
+            </ul>
+        </div>
+        <div class="social-links">
+            <a href="#"><img src="/img/logo/ToyBox_ImageLogo.png" alt="페이스북"></a>
+            <a href="#"><img src="/img/logo/ToyBox_ImageLogo.png" alt="인스타그램"></a>
+            <a href="#"><img src="/img/logo/ToyBox_ImageLogo.png" alt="유튜브"></a>
+        </div>
+    </footer>
+</body>
+<script th:inline="javascript">
+    var movieList = [[${movieList}]];
+
+    // 영화 목록 생성
+    var movieListContainer = document.getElementById("movie-list");
+    var slideInterval = 3000; // 슬라이드 간격 (5초)
+
+    // 초기에는 4개의 영화 아이템만 보이도록 설정
+    var initialItems = movieList.slice(0, 4);
+    for (var i = 0; i < initialItems.length; i++) {
+        var movieItem = createMovieItem(initialItems[i], i);
+        movieListContainer.appendChild(movieItem);
+    }
+
+    // 슬라이드 애니메이션 시작
+    var currentSlide = initialItems.length - 1;
+    var maxSlide = movieList.length - 1;
+    var isSlideRunning = true;
+
+    function slideMovies() {
+        if (!isSlideRunning) {
+            return;
+        }
+
+        var nextSlide = (currentSlide + 1) % movieList.length;
+
+        var movieItemToRemove = movieListContainer.firstElementChild;
+        movieListContainer.removeChild(movieItemToRemove);
+
+        var movieItemToAdd = createMovieItem(movieList[nextSlide]);
+        movieListContainer.appendChild(movieItemToAdd);
+
+        currentSlide = nextSlide;
+    }
+
+    var slideIntervalId = setInterval(slideMovies, slideInterval);
+
+    // 마우스 호버 시 슬라이드 멈춤
+    movieListContainer.addEventListener("mouseenter", function() {
+        clearInterval(slideIntervalId);
+        isSlideRunning = false;
+    });
+
+    // 마우스 이탈 시 슬라이드 다시 시작
+    movieListContainer.addEventListener("mouseleave", function() {
+        slideIntervalId = setInterval(slideMovies, slideInterval);
+        isSlideRunning = true;
+    });
+
+    // 영화 아이템 생성 함수
+    function createMovieItem(movieData, i) {
+        var movieItem = document.createElement('div');
+        movieItem.classList.add('movie-item');
+
+        var movieTitle = document.createElement('h3');
+        movieTitle.textContent = movieData.movieTitle;
+
+        var movieImg = document.createElement('img');
+        movieImg.src = "https://image.tmdb.org/t/p/original" + movieData.movieImage;
+        movieImg.alt = "영화 " + (i + 1);
+
+<!--        var movieImg = document.createElement('img');-->
+<!--        if (movieData.movieNm == "미션 임파서블: 데드 레코닝 PART ONE") {-->
+<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/86/26_p1.jpg";-->
+<!--        } else if (movieData.movieNm == "엘리멘탈") {-->
+<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/85/10_p1.jpg";-->
+<!--        } else if (movieData.movieNm == "범죄도시3") {-->
+<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/73/30_p1.jpg";-->
+<!--        } else if (movieData.movieNm == "여름날 우리") {-->
+<!--            movieImg.src = "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQG1QtjCVqR6YuZ08hb3WX8NZGXHHqsuTQoUvS1MCpTOY7jn7GM";-->
+<!--        } else if (movieData.movieNm == "스파이더맨: 어크로스 더 유니버스") {-->
+<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/88/80_p1.jpg";-->
+<!--        } else if (movieData.movieNm == "비공식작전") {-->
+<!--            movieImg.src = "https://an2-img.amz.wtchn.net/image/v2/eTb2nuk4L9Fpn1FpisDk3g.jpg?jwt=ZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKdmNIUnpJanBiSW1SZk1qZ3dlRFF3TUhFNE1DSmRMQ0p3SWpvaUwzWXlMM04wYjNKbEwybHRZV2RsTHpFMk9EZzVOak14TnpRek1UUTJPRFkyTWpJaWZRLlRJdmQ0UXpCY3hRUzdaOWswS1ZCVWIzeGxyazYyRG82YlN5WjhtZkczbWc";-->
+<!--        } else if (movieData.movieNm == "인디아나 존스: 운명의 다이얼") {-->
+<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/88/20_p1.jpg";-->
+<!--        } else if (movieData.movieNm == "극장판 도라에몽: 진구와 하늘의 유토피아") {-->
+<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/82/05_p1.jpg";-->
+<!--        } else if (movieData.movieNm == "보 이즈 어프레이드") {-->
+<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/85/63_p1.jpg";-->
+<!--        } else if (movieData.movieNm == "극장판 피노키오 위대한 모험") {-->
+<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/67/73_p1.jpg";-->
+<!--        }-->
+<!--        movieImg.alt = "영화 " + (i + 1);-->
+
+        var movieDescription = document.createElement('p');
+        movieDescription.textContent = "상세";
+
+        movieItem.appendChild(movieImg);
+        movieItem.appendChild(movieTitle);
+        movieItem.appendChild(movieDescription);
+
+        return movieItem;
+    }
+</script>
+</html>

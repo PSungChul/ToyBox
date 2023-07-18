@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입</title>
+    <link rel="stylesheet" type="text/css" href="/css/join_find.css">
+    <link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-neo.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- th:object="${바인딩한 객체의 변수명}" - 모델로 바인딩한 객체를 가져온다. -->
+        <form action="/loginform/joinform/join" method="post" th:object="${joinDTO}">
+            <!-- 아이디 중복 체크 값 -->
+            <input id="hId" type="hidden">
+            <!-- 이메일 중복 체크 값 -->
+            <input id="hEmailCheck" type="hidden">
+            <!-- 이메일 인증 번호 체크 값 -->
+            <input id="hEmailKey" type="hidden">
+
+            <div class="mainLogo">
+                <a href="/" alt="ToyBox">
+                    <img src="/img/logo/ToyBoxLogo.png" class="mainLogoImg">
+                </a>
+            </div>
+            <h2>회원가입</h2>
+
+            <div class="joinFormContainer">
+                <ul>
+                    <li class="liJoinInput"><label class="labelText">아이디</label><br><input th:field="*{id}" class="inputText" placeholder="10자 이내 아이디" type="text">
+                                                                                     <input type="button" value="중복확인" class="btnJoinForm" onclick="checkId(this.form)"><br></li>
+                    <li class="liJoinInput"><label id="idCheck" class="errorMsg"></label></li>
+
+                    <li class="liJoinInput"><label class="labelText">비밀번호</label><br><input th:field="*{pwd}" type="password" class="inputText" placeholder="영문, 숫자, 특수기호를 포함하여 5자리 이상" oninput="pwdCheck(this.form)"><br></li>
+                    <li class="liJoinInput"><label id="pwdText1" class="errorMsg"></label></li>
+                    <li class="liJoinInput"><label class="labelText">비밀번호 확인</label><br><input id="pwd2" type="password" class="inputText" placeholder="영문, 숫자, 특수기호를 포함하여 5자리 이상" oninput="pwdCheck2(this.form)"><br></li>
+                    <li class="liJoinInput"><label id="pwdText2" class="errorMsg"></label></li>
+
+                    <li class="liJoinInput"><label class="labelText">이름</label><br><input th:field="*{name}" class="inputText" placeholder="이름" type="text" readonly></li>
+
+                    <li class="liJoinInput"><label class="labelText">생일</label><br><input th:field="*{birthday}" class="inputText" readonly></li>
+
+                    <li class="liJoinInput"><label class="labelText">휴대전화</label><br><input th:field="*{phoneNumber}" type="tel" class="inputText" readonly></li>
+
+                    <li class="liJoinInput"><label class="labelText">이메일</label><br><input th:field="*{email}" class="inputText" placeholder="이메일 주소" type="text">
+                                                                                     <input type="button" value="인증번호 전송" class="btnJoinForm" onclick="sendEmail(this.form)"></li>
+                    <li class="liJoinInput"><label class="labelText">인증번호 입력</label><br><input id="emailKey" class="inputText" placeholder="인증번호" type="text">
+                                                                                           <input type="button" value="인증번호 확인" class="btnJoinForm" onclick="checkEmail()"></li>
+                </ul>
+            </div>
+
+            <div class="divBtnJoin">
+                <input type="button" value="가입" class="btnJoin" onclick="join(this.form)">
+                <input type="button" value="취소" class="btnJoin" onclick="location.href='/loginform'">
+            </div>
+        </form>
+    </div>
+</body>
+<!--아이디 중복체크 및 글자 수 제한-->
+<script>
+    function checkId(f) {
+        let id = f.id.value; // 입력한 아이디 가져오기
+        let idCheck = document.getElementById('idCheck');
+
+        if (id.length > 10) {
+            alert('아이디의 길이는 10자 이내입니다.');
+            idCheck.innerHTML = '아이디는 10자내로 작성해주세요.';
+        } else {
+            idCheck.innerHTML = '';
+            fetch('/loginform/joinform/idcheck', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'id=' + id
+            })
+                .then(response => response.text())
+                .then(data => {
+                    let hId = document.getElementById('hId');
+                    if (data == 'no') {
+                        alert('이미 존재하는 아이디입니다.');
+                        hId.value = 'false';
+                        return;
+                    } else {
+                        alert('사용 가능한 아이디입니다.');
+                        hId.value = data;
+                        return;
+                    }
+                })
+                .catch(error => console.error(error)); // fetch
+        }
+    }
+</script>
+<!--비밀번호 형식 제한-->
+<script>
+    function pwdCheck(f) {
+        let pwd = f.pwd.value;
+        let pwdText1 = document.getElementById('pwdText1');
+
+        let pattern1 = /[0-9]/; // 숫자 입력
+        let pattern2 = /[a-zA-Z]/; // 영어 소문자, 대문자 입력
+        let pattern3 = /[~!@#$%^&*()_+]/; // 특수기호 입력
+
+        if (!pattern1.test(pwd) || !pattern2.test(pwd) || !pattern3.test(pwd) || pwd.length < 5) {
+            pwdText1.innerHTML = '영문, 숫자, 특수기호(~!@#$%^&*()_+)를 포함하여 5자리 이상으로 구성하여야 합니다.';
+        } else {
+            pwdText1.innerHTML = '';
+        }
+    }
+
+    function pwdCheck2(f) {
+        let pwd = f.pwd.value;
+        let pwd2 = f.pwd2.value;
+        let pwdText2 = document.getElementById('pwdText2');
+
+        if (pwd2 != pwd) {
+            pwdText2.innerHTML = '비밀번호가 일치하지 않습니다.';
+        } else {
+            pwdText2.innerHTML = '';
+        }
+    }
+</script>
+<!-- 이메일 중복 체크, 이메일 인증 번호 전송 및 체크 -->
+<script>
+    // 이메일 인증 번호 발송
+    function sendEmail(f) {
+        let email = f.email.value;
+
+        // 이메일 형식 체크 패턴
+        let pattern = /^[A-Za-z0-9_\.\-]+@[A-Za-z0-9\-]+\.[A-Za-z0-9\-]+/;
+
+        // 이메일이 이메일 형식에 맞는지 체크한다.
+        // 이메일 형식이 아닐 경우
+        if( !pattern.test(email) ) {
+            alert('이메일 형식을 다시 확인해주세요\n ex) abc@naver.com');
+            return;
+        // 이메일 형식이 맞는 경우
+        } else {
+            fetch('/loginform/certification/email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'email=' + email
+            })
+                .then(response => response.json()) // JSON 형식으로 파싱
+                .then(data => {
+                    let hEmailCheck = document.getElementById('hEmailCheck'); // 이메일 중복 체크 값
+                    let hEmailKey = document.getElementById('hEmailKey'); // 이메일 인증 번호 체크 값
+
+                    // 메일이 발송이 실패한 경우 - 중복된 이메일 - 사용 불가
+                    if (data.email == '0') {
+                        alert(data.msg); // 변환된 DTO 값 중 메세지를 가져와 알람으로 띄운다.
+                        hEmailCheck.value = 'false'; // 이메일 중복 체크 값에 false를 전달한다.
+                        return;
+                    // 메일 발송이 실패한 경우 - 내부 문제로 발송 실패
+                    } else if (data.email == '-1') {
+                        alert(data.msg); // 변환된 DTO 값 중 메세지를 가져와 알람으로 띄운다.
+                        hEmailCheck.value = 'false'; // 이메일 중복 체크 값에 false를 전달한다.
+                        return;
+                    // 메일이 발송이 성공한 경우 - 사용 가능한 이메일
+                    } else {
+                        alert('인증 메일을 발송했습니다.');
+                        hEmailKey.value = data.msg; // 이메일 인증 번호 체크 값에 암호화된 이메일 인증 번호를 전달한다.
+                        return;
+                    }
+                }) // 응답 데이터 처리
+                .catch(error => console.error(error)); // 오류 처리
+        }
+    }
+
+    // 이메일 인증 번호 체크
+    function checkEmail() {
+        let email = document.getElementById('email');
+        let emailKey = document.getElementById('emailKey'); // 이메일 인증 번호
+        let hEmailCheck = document.getElementById('hEmailCheck'); // 이메일 중복 체크 값
+        let hEmailKey = document.getElementById('hEmailKey'); // 이메일 인증 번호 체크 값(암호화된 이메일 인증 번호)
+
+        fetch('/loginform/certification/email/check', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'emailKey=' + emailKey.value +
+                  '&hEmailKey=' + hEmailKey.value
+        })
+            .then(response => response.json()) // JSON 형식으로 파싱
+            .then(data => {
+                // 이메일 인증 번호가 일치하는 경우 - 이메일 사용 가능
+                if (data === true) {
+                    alert('인증 되었습니다.');
+                    hEmailCheck.value = 'true'; // 이메일 중복 체크 값에 true를 전달한다.
+                    email.readOnly = true; // 인증된 이메일을 변경하지 못하도록 막는다.
+                    emailKey.readOnly = true; // 작성한 이메일 인증 번호를 변경하지 못하도록 막는다.
+                    return;
+                // 이메일 인증 번호가 일치하지 않는 경우 - 이메일 사용 불가
+                } else {
+                    alert('인증 번호를 다시 확인해주세요.');
+                    hEmailCheck.value = 'false'; // 이메일 중복 체크 값에 false를 전달한다.
+                    emailKey.value = ''; // 작성한 이메일 인증 번호를 초기화한다.
+                    return;
+                }
+            }) // 응답 데이터 처리
+            .catch(error => console.error(error)); // 오류 처리
+    }
+</script>
+<script>
+    function join(f) {
+        // 아이디
+        let id = f.id.value; // 아이디
+        let hId = document.getElementById('hId').value; // 아이디 중복체크
+
+        // 비밀번호
+        let pwd = f.pwd.value; // 비밀번호
+        let pwd2 = document.getElementById('pwd2').value; // 비밀번호 확인
+        // 비밀번호 형식
+        let pattern1 = /[0-9]/; // 숫자 입력
+        let pattern2 = /[a-zA-Z]/; // 영어 소문자, 대문자 입력
+        let pattern3 = /[~!@#$%^&*()_+]/; // 특수기호 입력
+
+        // 이메일
+        let email = f.email.value; // 이메일
+        let emailKey = document.getElementById('emailKey').value; //인증번호
+        let hEmailCheck = document.getElementById('hEmailCheck').value; //인증확인
+
+        // 유효성 검사
+
+        // 아이디
+        if (id == '') {
+            alert('아이디를 입력하세요.');
+            return;
+        }
+
+        //닉네임 형식
+        if (id.length > 10) {
+            alert('아이디의 길이는 10자 이내입니다.');
+            return;
+        }
+
+        if (id != hId) {
+            alert('아이디 중복확인을 해주세요.');
+            return;
+        }
+
+        //비밀번호
+        if (pwd == '') {
+            alert('비밀번호를 입력하세요.');
+            return;
+        }
+
+        //비밀번호 확인
+        if (pwd2 == '') {
+            alert('비밀번호 확인을 입력하세요.');
+            return;
+        }
+
+        //pwd 형식
+        if (!pattern1.test(pwd) || !pattern2.test(pwd) || !pattern3.test(pwd) || pwd.length < 5) {
+            alert('비밀번호 형식을 확인해주세요.');
+            return;
+        }
+
+        // 비밀번호 확인
+        if (pwd != pwd2) {
+            alert('비밀번호 확인이 비밀번호와 일치하지 않습니다.');
+            return;
+        }
+
+        // 이메일
+        if (email == '') {
+            alert('이메일을 입력하세요.');
+            return;
+        }
+
+        //인증번호
+        if (emailKey == '') {
+            alert('인증번호를 확인해주세요.');
+            return;
+        }
+
+        //인증번호 확인
+        if (hEmailCheck != 'true') {
+            alert('인증번호를 체크해주세요.');
+            return;
+        }
+
+        f.submit();
+    }
+</script>
+</html>

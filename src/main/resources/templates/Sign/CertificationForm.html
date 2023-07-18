@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>휴대폰 인증</title>
+    <link rel="stylesheet" type="text/css" href="/css/certification.css">
+</head>
+<body>
+    <div class="container smallContainer">
+        <div class="mainLogo">
+            <a href="/" alt="ToyBox">
+                <img src="/img/logo/ToyBoxLogo.png" class="mainLogoImg">
+            </a>
+        </div>
+        <h2>휴대폰 본인인증 단계입니다.</h2>
+        <div class="joinFormContainer">
+            <div class="divBtnJoin">
+                <input id="btnPhone" class="btnJoinForm" value="휴대폰 인증하기" type="button">
+            </div>
+        </div>
+    </div>
+
+    <form th:if="${type == 'join'}" action="/loginform/joinform" method="post" id="f" th:object="${joinDTO}">
+        <input th:field="*{name}" type="hidden">
+        <input th:field="*{birthday}" type="hidden">
+        <input th:field="*{phoneNumber}" type="hidden">
+    </form>
+
+    <form th:if="${type == 'resetPwd'}" action="/loginform/findpwdform/resetpwdform" method="post" id="ff" th:object="${userDTO}">
+        <input th:field="*{id}" type="hidden">
+    </form>
+</body>
+<!--------------------------------------------------------------------------------------------------------------------->
+<!-- iamport.payment.js 인증 -->
+<script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.2.0.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<!-- 아임포트 본인인증 및 값 삽입 => '인증하기' 버튼 클릭시 -->
+<script th:inline="javascript">
+    let openPort = document.getElementById('btnPhone');
+    openPort.addEventListener('click', function() {
+        var IMP = window.IMP;
+        IMP.init('imp88140833');
+        IMP.certification({
+            popup: true // 팝업 사용
+        }, function (rsp) {
+            if (rsp.success){
+                let impUid = rsp.imp_uid;
+                let type = [[${type}]];
+                if (type == 'join') { // 회원가입
+                    fetch('/loginform/certificationform/certification', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: 'impUid=' + impUid +
+                              '&type=' + type
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if(data.name == 'no') {
+                                alert(data.phoneNumber);
+                                location.href = '/loginform';
+                                return;
+                            } else {
+                                let f = document.getElementById('f');
+                                let name = f.name;
+                                let birthday = f.birthday;
+                                let phoneNumber = f.phoneNumber;
+                                name.value = data.name;
+                                birthday.value = data.birthday;
+                                phoneNumber.value = data.phoneNumber;
+
+                                f.submit();
+                                return;
+                            }
+                        })
+                        .catch(error => console.error(error)); // fetch
+                } else if (type == 'findId') { // 아이디 찾기
+                    fetch('/loginform/certificationform/certification', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: 'impUid=' + impUid +
+                              '&type=' + type
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.name == '0') {
+                                alert(data.phoneNumber);
+                                return;
+                            } else if (data.name == '1') {
+                                alert(data.phoneNumber);
+                                location.href = '/loginform';
+                                return;
+                            } else {
+                                alert(data.phoneNumber);
+                                return;
+                            }
+                        })
+                        .catch(error => console.error(error)); // fetch
+                } else { // 비밀번호 찾기
+                    let ff = document.getElementById('ff');
+                    type = ff.id.value
+                    fetch('/loginform/certificationform/certification', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: 'impUid=' + impUid +
+                              '&type=' + type
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.name == '1') {
+                                alert(data.phoneNumber);
+                                ff.submit()
+                                return;
+                            } else {
+                                alert(data.phoneNumber);
+                                return;
+                            }
+                        })
+                        .catch(error => console.error(error)); // fetch
+                }
+            } else {
+                alert('인증 실패하였습니다.');
+                return;
+            }// function
+        }); // certification
+    }); // addEventListener
+</script>
+</html>
