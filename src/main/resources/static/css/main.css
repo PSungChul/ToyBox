@@ -97,7 +97,6 @@ main {
 
 /* 영화 목록 스타일 */
 .movies {
-
   overflow-x: scroll;
   white-space: nowrap;
   padding: 0 20%;
@@ -113,6 +112,7 @@ main {
   margin-right: 20px;
   text-align: center;
   transition: transform 0.3s ease;
+  cursor: pointer;
 }
 
 .movie-item:last-child {
@@ -129,14 +129,36 @@ main {
   margin-bottom: 10px;
 }
 
-.movie-item h3 {
-  margin: 0;
+.movie-item .back {
+  padding: 15px;
+  white-space: normal; /* 텍스트가 요소의 가로 공간을 넘어가면 아래로 내려가도록 처리 */
+  overflow: hidden; /* 요소 내부의 콘텐츠가 너무 많을 경우 숨김 처리 */
+  text-overflow: ellipsis; /* 텍스트가 너무 길 경우 생략 부호(...) 표시 */
+  margin-bottom: 10px;
   font-size: 16px;
 }
 
-.movie-item p {
+.front {
+  background-color: #f0f0f0;
+  display: block; /* 초기 상태: 정면으로 표시 */
+}
+
+.back {
+  background-color: #ffcc00;
+  display: none; /* 초기 상태: 뒷면으로 표시 */
+}
+
+.movie-item:hover img {
+  display: none; /* 마우스 오버 시 카드 뒤집기 */
+}
+
+.movie-item:hover .back {
+  display: block; /* 마우스 오버 시 카드 뒤집기 */
+}
+
+.movie-item h3 {
   margin: 0;
-  color: #888;
+  font-size: 16px;
 }
 
 /* 이벤트 스타일 */

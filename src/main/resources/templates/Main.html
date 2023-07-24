@@ -64,7 +64,7 @@
 
     <footer>
         <div class="footer-content">
-            <p>메가박스 정보</p>
+            <p>토이박스 정보</p>
             <ul>
                 <li><a href="#">이용약관</a></li>
                 <li><a href="#">개인정보처리방침</a></li>
@@ -137,38 +137,24 @@
 
         var movieImg = document.createElement('img');
         movieImg.src = "https://image.tmdb.org/t/p/original" + movieData.movieImage;
+        movieImg.classList.add('front');
         movieImg.alt = "영화 " + (i + 1);
 
-<!--        var movieImg = document.createElement('img');-->
-<!--        if (movieData.movieNm == "미션 임파서블: 데드 레코닝 PART ONE") {-->
-<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/86/26_p1.jpg";-->
-<!--        } else if (movieData.movieNm == "엘리멘탈") {-->
-<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/85/10_p1.jpg";-->
-<!--        } else if (movieData.movieNm == "범죄도시3") {-->
-<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/73/30_p1.jpg";-->
-<!--        } else if (movieData.movieNm == "여름날 우리") {-->
-<!--            movieImg.src = "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQG1QtjCVqR6YuZ08hb3WX8NZGXHHqsuTQoUvS1MCpTOY7jn7GM";-->
-<!--        } else if (movieData.movieNm == "스파이더맨: 어크로스 더 유니버스") {-->
-<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/88/80_p1.jpg";-->
-<!--        } else if (movieData.movieNm == "비공식작전") {-->
-<!--            movieImg.src = "https://an2-img.amz.wtchn.net/image/v2/eTb2nuk4L9Fpn1FpisDk3g.jpg?jwt=ZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKdmNIUnpJanBiSW1SZk1qZ3dlRFF3TUhFNE1DSmRMQ0p3SWpvaUwzWXlMM04wYjNKbEwybHRZV2RsTHpFMk9EZzVOak14TnpRek1UUTJPRFkyTWpJaWZRLlRJdmQ0UXpCY3hRUzdaOWswS1ZCVWIzeGxyazYyRG82YlN5WjhtZkczbWc";-->
-<!--        } else if (movieData.movieNm == "인디아나 존스: 운명의 다이얼") {-->
-<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/88/20_p1.jpg";-->
-<!--        } else if (movieData.movieNm == "극장판 도라에몽: 진구와 하늘의 유토피아") {-->
-<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/82/05_p1.jpg";-->
-<!--        } else if (movieData.movieNm == "보 이즈 어프레이드") {-->
-<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/85/63_p1.jpg";-->
-<!--        } else if (movieData.movieNm == "극장판 피노키오 위대한 모험") {-->
-<!--            movieImg.src = "https://img.movist.com/?img=/x00/05/67/73_p1.jpg";-->
-<!--        }-->
-<!--        movieImg.alt = "영화 " + (i + 1);-->
-
-        var movieDescription = document.createElement('p');
-        movieDescription.textContent = "상세";
+        var movieDescription = document.createElement('div');
+        movieDescription.classList.add('back');
+        movieDescription.textContent = movieData.movieOverview;
 
         movieItem.appendChild(movieImg);
-        movieItem.appendChild(movieTitle);
         movieItem.appendChild(movieDescription);
+        movieItem.appendChild(movieTitle);
+
+        // 이미지가 로드된 후에 .back 요소의 크기를 조정
+        movieImg.addEventListener("load", () => {
+            const imgWidth = movieImg.offsetWidth;
+            const imgHeight = movieImg.offsetHeight;
+            movieDescription.style.width = `${imgWidth}px`;
+            movieDescription.style.height = `${imgHeight}px`;
+        });
 
         return movieItem;
     }
